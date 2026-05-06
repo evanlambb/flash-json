@@ -24,6 +24,10 @@ export function useFlashcards() {
     setCards((prev) => prev.filter((card) => card.id !== id));
   }, []);
 
+  const resetAllCardsToNew = useCallback(() => {
+    setCards((prev) => prev.map((card) => ({ ...card, status: "new" })));
+  }, []);
+
   const importCards = useCallback((payloadText) => {
     let parsed;
     try {
@@ -47,10 +51,15 @@ export function useFlashcards() {
 
   const stats = useMemo(() => {
     const know = cards.filter((card) => card.status === "know").length;
+    const practicing = cards.filter((card) => card.status === "practicing").length;
+    const fresh = cards.filter((card) => card.status === "new").length;
     return {
       total: cards.length,
       know,
       active: cards.length - know,
+      stillLearning: cards.length - know,
+      practicing,
+      new: fresh,
     };
   }, [cards]);
 
@@ -60,6 +69,7 @@ export function useFlashcards() {
     addCard,
     updateCard,
     removeCard,
+    resetAllCardsToNew,
     importCards,
   };
 }

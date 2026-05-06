@@ -4,8 +4,9 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
-.perspective-1000 {
-  perspective: 1000px;
+.card-perspective {
+  perspective: 1400px;
+  perspective-origin: center;
 }
 
 .transform-style-3d {
