@@ -29,21 +29,21 @@ function Card({ front, back, flipped, onFlip, feedback }) {
 function CardFace({ label, text, back = false, feedback }) {
   const feedbackToneClass =
     feedback === "know"
-      ? "border-emerald-300 bg-emerald-100"
+      ? "border-emerald-300 bg-emerald-100 dark:border-[#e2b714] dark:bg-[#e2b714]/15"
       : feedback === "practicing"
-        ? "border-rose-300 bg-rose-100"
-        : "border-slate-200 bg-white";
+        ? "border-rose-300 bg-rose-100 dark:border-[#4a4d57] dark:bg-[#2c2e31]"
+        : "border-slate-200 bg-white dark:border-[#4a4d57] dark:bg-[#2c2e31]";
 
   return (
     <div
       className={`backface-hidden absolute inset-0 flex h-full w-full flex-col rounded-2xl border p-7 shadow-sm transition-colors duration-[225ms] ${feedbackToneClass}`}
       style={{ transform: back ? "rotateX(180deg)" : "rotateX(0deg)" }}
     >
-      <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
-      <div className="mt-6 flex-1 overflow-auto text-balance text-2xl text-slate-900">
-        {text || <span className="text-slate-400">(empty)</span>}
+      <span className="text-xs uppercase tracking-wide text-slate-400 dark:text-[#646669]">{label}</span>
+      <div className="mt-6 flex-1 overflow-auto text-balance text-2xl text-slate-900 dark:text-[#d1d0c5]">
+        {text || <span className="text-slate-400 dark:text-[#646669]">(empty)</span>}
       </div>
-      <p className="mt-4 text-xs text-slate-400">Click card to flip</p>
+      <p className="mt-4 text-xs text-slate-400 dark:text-[#646669]">Click card to flip</p>
     </div>
   );
 }
