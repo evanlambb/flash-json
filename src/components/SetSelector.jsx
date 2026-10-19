@@ -120,7 +120,6 @@ function SetSelector({ sets, activeSetId, onSelect, onCreate, onRename, onDelete
           />
         </svg>
       </button>
-      <p className="text-xs text-slate-500 dark:text-[#646669]">Study Set</p>
 
       {isOpen ? (
         <div
