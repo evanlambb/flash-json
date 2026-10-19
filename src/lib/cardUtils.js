@@ -1,6 +1,6 @@
 let idCounter = 0;
 
-function generateId() {
+export function generateId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
