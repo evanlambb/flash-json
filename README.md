@@ -6,8 +6,9 @@ Built with React 19, Vite, and Tailwind CSS.
 
 ## Features
 
-- **JSON-first decks** — Paste or import an array of `{ front, back }` cards and they show up instantly.
-- **Three-state progress tracking** — Each card is `new`, `practicing`, or `know`. Progress is persisted to `localStorage`.
+- **Multiple study sets** — Keep separate sets (e.g. one per class), switch between them from the header dropdown, and create, rename, or delete sets. Each set has its own cards and progress.
+- **JSON-first decks** — Paste or import an array of `{ front, back }` cards into an existing set or a brand-new one.
+- **Three-state progress tracking** — Each card is `new`, `practicing`, or `know`. Progress is persisted to `localStorage` per set.
 - **Focused study session** — Step through your deck, flip cards, and mark them as known or still learning.
 - **Deck management** — Add, edit, remove, and bulk-import cards from the UI.
 - **Light & dark mode** — Toggle from the header; preference is remembered.
@@ -29,9 +30,19 @@ npm run build
 npm run preview
 ```
 
+### Test
+
+```bash
+npm test
+```
+
+## Study sets
+
+Click the set name in the header to switch sets or to create, rename, and delete them. All sets are saved in `localStorage` under the `flashcards-sets` key. Deleting every set is allowed; the app then prompts you to create a new one.
+
 ## Importing a deck
 
-Use the **Manage Deck** section to paste a JSON array of cards. Each card must have a `front` and `back` string; `id` and `status` are optional.
+Use **Import JSON** in the **Manage Deck** section. Pick the set to import into (it defaults to the active set) or choose **New set…** and give it a name; importing into a new set switches to it. Then paste a JSON array of cards or upload a `.json` file. Each card must have a `front` and `back` string; `id` and `status` are optional.
 
 ```json
 [
@@ -52,9 +63,10 @@ Allowed values for `status`: `"new"`, `"practicing"`, `"know"`. Invalid or missi
 
 ```
 src/
-  components/      React UI (FlashcardApp, StudySession, DeckManager, Card)
-  hooks/           useFlashcards — state, persistence, import logic
-  lib/             cardUtils, deckStorage (localStorage helpers)
+  components/      React UI (FlashcardApp, SetSelector, StudySession, DeckManager, Card)
+  hooks/           useStudySets — sets, active set, card ops, persistence, import logic
+  lib/             cardUtils, setStorage (localStorage helpers)
+  test/            Vitest setup
   App.jsx          App shell
   main.jsx         Vite entry
 ```

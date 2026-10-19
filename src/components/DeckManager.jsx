@@ -1,21 +1,61 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
-function DeckManager({ cards, onAddCard, onUpdateCard, onRemoveCard, onImportCards }) {
+const NEW_SET_OPTION = "__new_set__";
+
+function DeckManager({
+  cards,
+  sets,
+  activeSetId,
+  onAddCard,
+  onUpdateCard,
+  onRemoveCard,
+  onImportToSet,
+  onImportToNewSet,
+}) {
   const [importText, setImportText] = useState("");
   const [importFeedback, setImportFeedback] = useState(null);
+  const [modalError, setModalError] = useState(null);
   const [copyFeedback, setCopyFeedback] = useState(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importTarget, setImportTarget] = useState(NEW_SET_OPTION);
+  const [newSetName, setNewSetName] = useState("");
   const [newCardFront, setNewCardFront] = useState("");
   const [newCardBack, setNewCardBack] = useState("");
+  const modalTitleId = useId();
+  const targetSelectId = useId();
+  const newSetNameId = useId();
+
+  const openImportModal = () => {
+    const activeExists = sets.some((set) => set.id === activeSetId);
+    setImportTarget(activeExists ? activeSetId : NEW_SET_OPTION);
+    setNewSetName("");
+    setModalError(null);
+    setIsImportModalOpen(true);
+  };
+
+  const closeImportModal = () => {
+    setIsImportModalOpen(false);
+    setImportTarget(NEW_SET_OPTION);
+    setNewSetName("");
+    setModalError(null);
+  };
 
   const handleImport = () => {
-    const result = onImportCards(importText);
+    const result =
+      importTarget === NEW_SET_OPTION
+        ? onImportToNewSet(importText, newSetName)
+        : onImportToSet(importText, importTarget);
+
     if (result.ok) {
-      setImportFeedback({ type: "success", message: `Imported ${result.count} cards.` });
+      const noun = result.count === 1 ? "card" : "cards";
+      setImportFeedback({
+        type: "success",
+        message: `Imported ${result.count} ${noun} into ${result.setName}.`,
+      });
       setImportText("");
-      setIsImportModalOpen(false);
+      closeImportModal();
     } else {
-      setImportFeedback({ type: "error", message: result.message });
+      setModalError(result.message);
     }
   };
 
@@ -25,6 +65,7 @@ function DeckManager({ cards, onAddCard, onUpdateCard, onRemoveCard, onImportCar
     const text = await file.text();
     setImportText(text);
     setImportFeedback(null);
+    setModalError(null);
   };
 
   const handleAddCard = () => {
@@ -74,7 +115,7 @@ function DeckManager({ cards, onAddCard, onUpdateCard, onRemoveCard, onImportCar
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setIsImportModalOpen(true)}
+              onClick={openImportModal}
               className="rounded-md border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:border-[#e2b714] dark:bg-transparent dark:text-[#e2b714] dark:hover:bg-[#e2b714]/10"
             >
               Import JSON
@@ -109,29 +150,95 @@ function DeckManager({ cards, onAddCard, onUpdateCard, onRemoveCard, onImportCar
 
       {isImportModalOpen ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-[#4a4d57] dark:bg-[#2c2e31]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={modalTitleId}
+            className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-[#4a4d57] dark:bg-[#2c2e31]"
+          >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold">Import JSON Deck</h3>
+                <h3 id={modalTitleId} className="text-lg font-semibold">Import JSON Deck</h3>
                 <p className="mt-1 text-sm text-slate-500 dark:text-[#646669]">
                   Paste JSON array like [{`{"front":"Hola","back":"Hello"}`}]
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setIsImportModalOpen(false)}
+                onClick={closeImportModal}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 dark:border-[#4a4d57] dark:text-[#d1d0c5] dark:hover:bg-[#3a3d44]"
               >
                 Close
               </button>
             </div>
 
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor={targetSelectId}
+                  className="block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-[#646669]"
+                >
+                  Import into
+                </label>
+                <select
+                  id={targetSelectId}
+                  value={importTarget}
+                  onChange={(event) => {
+                    setImportTarget(event.target.value);
+                    setModalError(null);
+                  }}
+                  className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-500 focus:outline-none dark:border-[#4a4d57] dark:bg-[#323437] dark:text-[#d1d0c5] dark:focus:border-[#e2b714]"
+                >
+                  {sets.map((set) => (
+                    <option key={set.id} value={set.id}>
+                      {set.name}
+                    </option>
+                  ))}
+                  <option value={NEW_SET_OPTION}>New set…</option>
+                </select>
+              </div>
+              {importTarget === NEW_SET_OPTION ? (
+                <div>
+                  <label
+                    htmlFor={newSetNameId}
+                    className="block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-[#646669]"
+                  >
+                    New set name
+                  </label>
+                  <input
+                    id={newSetNameId}
+                    type="text"
+                    value={newSetName}
+                    onChange={(event) => {
+                      setNewSetName(event.target.value);
+                      setModalError(null);
+                    }}
+                    placeholder="e.g. Spanish Vocab"
+                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none dark:border-[#4a4d57] dark:bg-[#323437] dark:text-[#d1d0c5] dark:focus:border-[#e2b714]"
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <label className="sr-only" htmlFor={`${modalTitleId}-json`}>
+              Deck JSON
+            </label>
             <textarea
+              id={`${modalTitleId}-json`}
               value={importText}
-              onChange={(event) => setImportText(event.target.value)}
+              onChange={(event) => {
+                setImportText(event.target.value);
+                setModalError(null);
+              }}
               placeholder='[{"front":"Question","back":"Answer"}]'
               className="mt-4 h-44 w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 focus:border-slate-500 focus:outline-none dark:border-[#4a4d57] dark:bg-[#323437] dark:text-[#d1d0c5] dark:focus:border-[#e2b714]"
             />
+
+            {modalError ? (
+              <p role="alert" className="mt-2 text-sm text-rose-700 dark:text-[#ca4754]">
+                {modalError}
+              </p>
+            ) : null}
 
             <div className="mt-4 flex flex-wrap gap-3">
               <button
